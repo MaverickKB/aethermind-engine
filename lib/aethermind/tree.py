@@ -1,5 +1,9 @@
 """Summary tree over a layers.aem store.
 
+The binary tree follows Victor Taelin's OptChat spec:
+https://gist.github.com/VictorTaelin/91837951a5ce5b38f341ec1ba1df6449
+This module does not implement that chat log. It only builds the derived tree.
+
 The tree is a derived projection. It never replaces the store: the layers
 file stays the only append-only authority, and every node here can be
 regenerated from it. Each node is one short line (default cap 384 bytes)
