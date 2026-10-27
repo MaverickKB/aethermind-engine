@@ -7,7 +7,7 @@ sure they were, and the fact itself. Records live in `.aethermind/` beside the
 project they describe. Later sessions read them. They do not replace them.
 
 Installing this package does not start a server, open a port, or create a store
-in this repository.
+in this repository. The license is public and noncommercial. See `LICENSE`.
 
 ## Install
 
