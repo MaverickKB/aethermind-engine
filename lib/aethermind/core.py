@@ -1574,6 +1574,7 @@ class AetherMind:
         last_n: Optional[int] = None,
         ctx_prefix: Optional[str] = None,
         markers_any: Optional[List[str]] = None,
+        text: Optional[str] = None,
     ) -> List[AetherLayer]:
         """Read layers with optional filters, composable together.
 
@@ -1595,11 +1596,14 @@ class AetherMind:
             not match "book4x/..." when given ctx_prefix="book4".
         markers_any: include a layer if it has at least one marker in this
             list.
+        text: case-insensitive substring of the body, the context, or a
+            marker. Empty means no text filter.
         """
         if self.layer_store is None:
             return []
         layers = self.layer_store.read()
         since_value = _parse_rfc3339(since_ts) if since_ts else None
+        needle = text.lower() if text else ""
 
         filtered = []
         for layer in layers:
@@ -1617,6 +1621,18 @@ class AetherMind:
                 continue
             if markers_any and not (set(layer.markers or []) & set(markers_any)):
                 continue
+            if needle:
+                body_text = layer.body or ""
+                context_text = layer.ctx or ""
+                marker_hit = False
+                for marker in layer.markers or []:
+                    if needle in str(marker).lower():
+                        marker_hit = True
+                        break
+                body_hit = needle in body_text.lower()
+                context_hit = needle in context_text.lower()
+                if not body_hit and not context_hit and not marker_hit:
+                    continue
             filtered.append(layer)
 
         if last_n is not None:
@@ -2165,6 +2181,7 @@ def read_layers(
     last_n: Optional[int] = None,
     ctx_prefix: Optional[str] = None,
     markers_any: Optional[List[str]] = None,
+    text: Optional[str] = None,
 ) -> List[AetherLayer]:
     """Read layers from default AetherMind context with filters."""
     project_root = os.getcwd()
@@ -2177,4 +2194,5 @@ def read_layers(
         last_n=last_n,
         ctx_prefix=ctx_prefix,
         markers_any=markers_any,
+        text=text,
     )

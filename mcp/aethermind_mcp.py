@@ -317,6 +317,7 @@ def read_layers(
     ctx_prefix: Optional[str] = None,
     markers_any: Optional[List[str]] = None,
     posture: Optional[str] = None,
+    text: Optional[str] = None,
 ) -> str:
     """Return filtered layers as JSON.
 
@@ -331,6 +332,7 @@ def read_layers(
     - ctx_prefix: path-segment prefix match against ctx (e.g. "book4/ch2"
       matches "book4/ch2/topic" but not "book4/ch2x/topic").
     - markers_any: include a layer if it has at least one of these markers.
+    - text: case-insensitive substring of the body, the context, or a marker.
     - posture: "live", "archived", or "all". Default None/"all", so existing
       callers still receive every layer they received before. "live" keeps
       layers currentness does not mark inactive. "archived" keeps layers
@@ -345,6 +347,7 @@ def read_layers(
         if posture not in (None, "live", "archived", "all"):
             raise ValueError("posture must be live, archived, or all")
         aethermind = AetherMind(project_root, create=False)
+        aethermind._require_store()
         layers = aethermind.read_layers(
             ctx=ctx,
             type=type,
@@ -353,6 +356,7 @@ def read_layers(
             last_n=None,
             ctx_prefix=ctx_prefix,
             markers_any=markers_any,
+            text=text,
         )
         inactive = aethermind.currentness().get("inactive") or {}
         selected = []
@@ -372,6 +376,7 @@ def read_layers(
             )[: max(0, int(last_n))]
         return json.dumps({
             "success": True,
+            "store": str(aethermind.project_root),
             "layers": [_layer_to_dict(l, inactive) for l in selected],
             "count": len(selected),
         })

@@ -92,6 +92,39 @@ def test_filters_are_composable_with_existing_filters(tmp_path):
     assert all(l.type == "correction" for l in matched)
 
 
+def test_text_matches_body_context_or_marker(tmp_path):
+    aether = AetherMind(tmp_path, create=True)
+    body_hit = _seed(
+        aether,
+        "notes/plain",
+        "2026-07-01T00:00:00Z",
+        body="Victor Taelin wrote the spec",
+    )
+    _seed(aether, "notes/other", "2026-07-01T00:00:01Z", body="unrelated note")
+    marker_hit = _seed(
+        aether,
+        "notes/marked",
+        "2026-07-01T00:00:02Z",
+        body="no name in the body",
+        markers=["victor-taelin"],
+    )
+    context_hit = _seed(
+        aether,
+        "notes/taelin-context",
+        "2026-07-01T00:00:03Z",
+        body="no name here either",
+    )
+
+    matched = aether.read_layers(text="taelin")
+
+    matched_ids = [layer.id for layer in matched]
+    assert body_hit.id in matched_ids
+    assert marker_hit.id in matched_ids
+    assert context_hit.id in matched_ids
+    assert len(matched_ids) == 3
+    assert aether.read_layers(text="zzzz-not-present") == []
+
+
 def test_old_read_layers_signature_and_order_unchanged(tmp_path):
     aether = AetherMind(tmp_path, create=True)
     aether.write_layer(type="discovery", body="first", ctx="t/oldsig", conf=1.0, markers=[])

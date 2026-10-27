@@ -218,8 +218,20 @@ def cmd_write_texture(args: argparse.Namespace) -> int:
 
 def cmd_read_layers(args: argparse.Namespace) -> int:
     aether = AetherMind(args.project_root or os.getcwd(), create=False)
-    layers = aether.read_layers(ctx=args.ctx, type=args.layer_type, author=args.author)
-    return _print({"success": True, "layers": [_layer_to_dict(layer) for layer in layers], "count": len(layers)})
+    aether._require_store()
+    layers = aether.read_layers(
+        ctx=args.ctx,
+        type=args.layer_type,
+        author=args.author,
+        text=args.text,
+    )
+    payload = {
+        "success": True,
+        "store": str(aether.project_root),
+        "layers": [_layer_to_dict(layer) for layer in layers],
+        "count": len(layers),
+    }
+    return _print(payload)
 
 
 def cmd_read_texture(args: argparse.Namespace) -> int:
@@ -410,6 +422,7 @@ def build_parser() -> argparse.ArgumentParser:
     read_layers.add_argument("--ctx")
     read_layers.add_argument("--type", dest="layer_type")
     read_layers.add_argument("--author")
+    read_layers.add_argument("--text", help="Case-insensitive substring of body, context, or marker.")
     read_layers.set_defaults(func=cmd_read_layers)
 
     read_texture = subparsers.add_parser("read-texture", help="Read texture.")
